@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #messages { margin-bottom: 40px }
+    </style>
+  </head>
+  <body>
+    <input type="hidden" id="nickname" name="nickname" value=<%- authInfo.nickname %> />
+    <input type="hidden" id="type" name="type" value=<%- authInfo.type %> />
+    <input type="hidden" id="from" name="from" value=<%- authInfo.from %> />
+    <input type="hidden" id="to" name="to" value=<%- authInfo.to %> />
+
+    <ul id="messages"></ul>
+    <form action="/message">
+      <input id="m" autocomplete="off" />
+      <button>Send</button>
+    </form>
+
+    <button id="reaction">reaction</button>
+    <button id="edit">edit</button>
+    <button id="delete">delete</button>
+
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      $(function () {
+        const socket = io();
+        const enterInfo = {
+            type: document.getElementById('type').value,
+            from: document.getElementById('from').value,
+            to: document.getElementById('to').value,
+        };
+
+        socket.emit("enter:room", enterInfo);
+        socket.on("enter:room", function(pastMessages) {
+           console.log(pastMessages);
+        });
+
+        $('form').submit(function(){
+            const messageInfo = {
+                type: document.getElementById('type').value,
+                from: document.getElementById('from').value,
+                to: document.getElementById('to').value,
+                body: $('#m').val()
+            };
+
+            socket.emit('chat:room', messageInfo);
+            $('#m').val('');
+            return false;
+        });
+
+        $('#reaction').click(function(e) {
+            const reactionInfo = {
+                id: 5683257223938048,
+                from: 2,
+                emoji: 1
+            };
+
+            socket.emit('chat:room:reaction', reactionInfo);
+        });
+
+        $('#edit').click(function(e) {
+            const editInfo = {
+                id: 5683257223938048,
+                body: "Taku"
+            };
+
+            socket.emit('chat:room:edit', editInfo);
+        });
+
+        $('#delete').click(function(e) {
+            const deleteInfo = {
+                id: 5683257223938048
+            };
+
+            socket.emit('chat:room:delete', deleteInfo);
+        });
+
+        socket.on('chat:room', function(receivedMessage){
+            console.log(receivedMessage);
+            $('#messages').append($('<li>').text(receivedMessage.body));
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('chat:room:edit', function(editedMessage) {
+            console.log(editedMessage);
+        });
+
+        socket.on('chat:room:reaction', function(reactedMessage) {
+            console.log(reactedMessage);
+        });
+
+        socket.on('chat:room:delete', function(deletedMessage) {
+            console.log(deletedMessage);
+        });
+      });
+    </script>
+  </body>
+</html>

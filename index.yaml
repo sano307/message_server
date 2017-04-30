@@ -1,0 +1,21 @@
+indexes:
+- kind: Messages
+  properties:
+  - name: room_name
+    direction: asc
+  - name: created_at
+    direction: desc
+
+- kind: Users
+  properties:
+  - name: __key__
+  - name: address
+  - name: first_name
+  - name: last_name
+  - name: image
+  - name: name
+
+- kind: Users
+  properties:
+  - name: __key__
+  - name: address
