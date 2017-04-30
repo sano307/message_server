@@ -118,6 +118,7 @@ function getMessage(messageInfo) {
     return datastore.runQuery(query).then(function (result) {
         var entity = result[0];
         entity.map(fromDatastore);
+        console.log(entity);
         return entity;
     });
 }

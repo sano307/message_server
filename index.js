@@ -132,6 +132,7 @@ function getMessage(messageInfo) {
         .then((result) => {
         const entity = result[0];
         entity.map(fromDatastore);
+        console.log(entity);
         return entity;
     });
 }
