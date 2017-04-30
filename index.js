@@ -21,7 +21,8 @@ app.set('view engine', 'html');
 // set datastore
 const Datastore = require('@google-cloud/datastore');
 const datastore = Datastore({
-    projectId: "cyberagent-127"
+    projectId: "cyberagent-127",
+    keyFilename: './path/keyfile.json'
 });
 
 const nicknameOfServer = "socketServer_01";
