@@ -8,6 +8,7 @@
     "express": "^4.15.2",
     "socket.io": "",
     "ejs": "",
+    "redis": "",
     "socket.io-redis": ""
   },
   "scripts": {

@@ -3,8 +3,11 @@
 const app = require('express')();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-const redis = require('socket.io-redis');
-io.adapter(redis({ host: '35.185.172.137', port: 6379 }));
+const redis = require('redis');
+const redisClient = redis.createClient(6379, '35.185.172.137');
+
+const redisSocket = require('socket.io-redis');
+io.adapter(redisSocket({ host: '35.185.172.137', port: 6379 }));
 
 const bodyParser = require('body-parser');
 
@@ -20,6 +23,8 @@ const Datastore = require('@google-cloud/datastore');
 const datastore = Datastore({
     projectId: "cyberagent-127"
 });
+
+const nicknameOfServer = "socketServer_01";
 
 /*
     REST API start
@@ -216,8 +221,22 @@ io.on('connection', function(socket){
     const roomName = convertRoomName(enterInfo);
     socket.join(roomName);
 
-    io.of('/').adapter.clients(function (err, clients) {
-        console.log(clients);
+    redisClient.hvals(nicknameOfServer, function(err, data) {
+        const cnt = ++data[1];
+        console.log(cnt);
+
+        redisClient.hset(nicknameOfServer, "cnt", cnt, function(err, reply) {
+            console.log(reply);
+            if(!err) {
+                if(reply === 0) {
+                    console.log('success');
+                } else {
+                    console.log('failed');
+                }
+            } else {
+                console.log('error : ', err);
+            }
+        });
     });
 
     let container = {};
@@ -486,7 +505,23 @@ io.on('connection', function(socket){
   });
 
   socket.on('disconnect', function () {
-      io.emit('user disconnected');
+      redisClient.hvals(nicknameOfServer, function(err, data) {
+          const cnt = --data[1];
+          console.log(cnt);
+
+          redisClient.hset(nicknameOfServer, "cnt", cnt, function(err, reply) {
+              console.log(reply);
+              if(!err) {
+                  if(reply === 0) {
+                      console.log('success');
+                  } else {
+                      console.log('failed');
+                  }
+              } else {
+                  console.log('error : ', err);
+              }
+          });
+      });
   });
 });
 

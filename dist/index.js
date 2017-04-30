@@ -5,8 +5,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-var redis = require('socket.io-redis');
-io.adapter(redis({ host: '35.185.172.137', port: 6379 }));
+var redis = require('redis');
+var redisClient = redis.createClient(6379, '35.185.172.137');
+
+var redisSocket = require('socket.io-redis');
+io.adapter(redisSocket({ host: '35.185.172.137', port: 6379 }));
 
 var bodyParser = require('body-parser');
 
@@ -22,6 +25,8 @@ var Datastore = require('@google-cloud/datastore');
 var datastore = Datastore({
     projectId: "cyberagent-127"
 });
+
+var nicknameOfServer = "socketServer_01";
 
 /*
     REST API start
@@ -197,8 +202,22 @@ io.on('connection', function (socket) {
         var roomName = convertRoomName(enterInfo);
         socket.join(roomName);
 
-        io.of('/').adapter.clients(function (err, clients) {
-            console.log(clients);
+        redisClient.hvals(nicknameOfServer, function (err, data) {
+            var cnt = ++data[1];
+            console.log(cnt);
+
+            redisClient.hset(nicknameOfServer, "cnt", cnt, function (err, reply) {
+                console.log(reply);
+                if (!err) {
+                    if (reply === 0) {
+                        console.log('success');
+                    } else {
+                        console.log('failed');
+                    }
+                } else {
+                    console.log('error : ', err);
+                }
+            });
         });
 
         var container = {};
@@ -454,7 +473,23 @@ io.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function () {
-        io.emit('user disconnected');
+        redisClient.hvals(nicknameOfServer, function (err, data) {
+            var cnt = --data[1];
+            console.log(cnt);
+
+            redisClient.hset(nicknameOfServer, "cnt", cnt, function (err, reply) {
+                console.log(reply);
+                if (!err) {
+                    if (reply === 0) {
+                        console.log('success');
+                    } else {
+                        console.log('failed');
+                    }
+                } else {
+                    console.log('error : ', err);
+                }
+            });
+        });
     });
 });
 
